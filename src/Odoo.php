@@ -115,11 +115,21 @@ class Odoo
     protected $limit;
 
     /**
+     * Order
+     * field ordered
+     *
+     * @var array
+     */
+    protected $orders;
+
+
+    /**
      * fields to be requested
      *
      * @var array
      */
     protected $fields;
+
 
 
     /**
@@ -218,6 +228,22 @@ class Odoo
     }
 
     /**
+     * Order result
+     *
+     * @param $fieldName
+     * @param bool $isAsc
+     * @return $this
+     */
+    public function orderBy($fieldName, $isAsc = true)
+    {
+        $this->orders = is_null($this->orders) ? [] : $this->orders;
+        $this->orders[] = sprintf('%s %s', $fieldName, $isAsc ? 'asc' : 'desc');
+
+        return $this;
+    }
+
+
+    /**
      * Set fields to retrieve.
      *
      * @param array $fields
@@ -245,7 +271,13 @@ class Odoo
 
         $params = $this->buildParams('limit', 'offset');
 
+        if ($this->orders) {
+            $params['order'] = implode(', ', $this->orders);
+        }
+
         $result = $this->call($model, $method, $condition, $params);
+
+        $this->orders = null;
 
         //Reset params for future queries.
         $this->resetParams('limit', 'offset', 'condition');
